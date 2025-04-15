@@ -3,10 +3,81 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <title>MP4 to Gif</title>
   </head>
-  <body>
-    <div id="app"></div>
+
+  <body class="bg-slate-200 grid place-items-center h-screen p-4">
+    <div
+      id="app"
+      class="bg-white rounded-md w-full max-w-2xl flex flex-col gap-8 p-4 -mt-48"
+    >
+      <h1 class="text-3xl font-bold">MP4 to Gif</h1>
+
+      <form id="form" class="flex flex-col gap-4 group">
+        <label title="Sets the gif width, aspect ratio is maintained">
+          <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Gif Size</span>
+          <span class="text-slate-500 text-sm">(higher means bigger file)</span>
+
+          <input
+            class="block border border-slate-400 rounded px-2 py-1 mt-2"
+            type="number"
+            name="scale"
+            min="160"
+            max="1920"
+            value="160"
+          />
+        </label>
+
+        <label title="Sets the Gif FPS (Frames Per Second)">
+          <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Gif Smoothness</span>
+          <span class="text-slate-500 text-sm">(higher means smoother animation but bigger file)</span>
+          <input
+            class="block border border-slate-400 rounded px-2 py-1 mt-2"
+            type="number"
+            name="fps"
+            min="6"
+            max="60"
+            value="6"
+          />
+        </label>
+
+        <input
+          class="file:px-4 file:py-1 file:rounded file:bg-slate-500 file:text-white file:cursor-pointer active:file:bg-slate-700"
+          type="file"
+          name="file"
+          required
+        />
+
+        <button class="bg-sky-600 text-white rounded py-1 mt-4 group-invalid:bg-sky-200 group-invalid:cursor-not-allowed cursor-pointer">Convert!</button>
+      </form>
+
+      <div>
+        <p
+          id="message"
+          class="text-slate-800 h-6"
+        ></p>
+
+        <progress
+          class="
+            w-full
+            [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-slate-300
+            [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-sky-500
+          "
+          id="progress"
+          max="100"
+          value="0"
+        ></progress>
+
+        <img id="palette" />
+
+        <p
+          id="file-size"
+          class="text-sm text-slate-600"
+        ></p>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1,36 +1,79 @@
-import { setupForm } from './video-input.ts'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <h1>MP4 to Gif</h1>
+const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
+let ffmpeg: FFmpeg | null = null
 
-  <form id="form">
-    <label title="Sets the gif width, aspect ratio is maintained">
-      Gif Size (higher means bigger file)
-      <input type="number" name="scale" value="160" />
-    </label>
+const form = document.querySelector<HTMLFormElement>('#form')!
+const palette = document.querySelector<HTMLImageElement>('#palette')!
+const message = document.querySelector<HTMLParagraphElement>('#message')!
+const progressBar = document.querySelector<HTMLProgressElement>('#progress')!
+const fileSize = document.querySelector<HTMLProgressElement>('#file-size')!
 
-    <label title="Sets the Gif FPS (Frames Per Second)">
-      Gif Smoothness (higher means bigger file)
-      <input type="number" name="fps" min="6" max="60" value="6" />
-    </label>
+async function convert(file: File, fps: number, scale: number) {
+  const log = messageLogger(message)
 
-    <input type="file" name="file" required />
+  if (ffmpeg === null) {
+    ffmpeg = new FFmpeg()
 
-    <button>Convert!</button>
-  </form>
+    ffmpeg.on('progress', ({ progress }) => progressBar.value = Math.round(progress * 100))
 
-  <div>
-    <p id="message"></p>
+    log('Loading libraries')
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    })
+    log('Done loading libraries')
+  }
 
-    <progress id="progress" max="100" value="0"></progress>
+  const { name } = file
+  await ffmpeg.writeFile(name, await fetchFile(file))
+  log('Converting...')
 
-    <img id="palette" />
-  </div>
-`
+  await ffmpeg.exec([
+    '-i',
+    name,
+    '-vf',
+    `fps=${fps},scale=${scale}:-1:flags=lanczos,palettegen`,
+    '-y',
+    'palette.png',
+  ])
 
-setupForm(
-  document.querySelector<HTMLFormElement>('#form')!,
-  document.querySelector<HTMLImageElement>('#palette')!,
-  document.querySelector<HTMLParagraphElement>('#message')!,
-  document.querySelector<HTMLProgressElement>('#progress')!,
-)
+  const paletteData = await ffmpeg.readFile('palette.png')
+  await ffmpeg.writeFile('palette.png', paletteData)
+
+  await ffmpeg.exec([
+    '-i',
+    name,
+    '-i',
+    'palette.png',
+    '-filter_complex',
+    `fps=${fps},scale=${scale}:-1:flags=lanczos[x];[x][1:v]paletteuse`,
+    '-y',
+    'output.gif',
+  ])
+
+  const gifData = await ffmpeg.readFile('output.gif')
+  log('Conversion done!')
+
+  palette.src = URL.createObjectURL(new Blob([gifData], { type: 'image/gif' }))
+  fileSize.textContent = `Gif size: ${(gifData.length / (1024 * 1024)).toFixed(2)}MB`
+}
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault()
+  if (event.target == null)
+    return
+
+  const formData = new FormData(event.target as HTMLFormElement)
+  const file = formData.get('file') as File
+
+  if (file.size === 0 || file.name === '')
+    return
+
+  convert(file, Number(formData.get('fps')), Number(formData.get('scale')))
+})
+
+function messageLogger(container: HTMLParagraphElement) {
+  return (message: string) => container.textContent = message
+}
