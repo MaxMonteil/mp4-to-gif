@@ -5,12 +5,35 @@ const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
 let ffmpeg: FFmpeg | null = null
 
 const form = document.querySelector<HTMLFormElement>('#form')!
+const uploader = document.querySelector<HTMLInputElement>('#uploader')!
+const previewVideo = document.querySelector<HTMLVideoElement>('#preview')!
 const palette = document.querySelector<HTMLImageElement>('#palette')!
 const message = document.querySelector<HTMLParagraphElement>('#message')!
 const progressBar = document.querySelector<HTMLProgressElement>('#progress')!
 const fileSize = document.querySelector<HTMLProgressElement>('#file-size')!
 
-async function convert(file: File, fps: number, scale: number) {
+async function loadVideo() {
+  const file = uploader.files?.[0]
+  if (!file)
+    return
+
+  const url = URL.createObjectURL(file)
+  previewVideo.preload = 'metadata'
+  previewVideo.src = url
+
+  const durationInput = document.querySelector<HTMLInputElement>('#duration')!
+  previewVideo.onloadedmetadata = () => {
+    durationInput.setAttribute('max', String(previewVideo.duration))
+  }
+
+  previewVideo.onerror = () => {
+    throw new Error('Failed to load video metadata')
+  }
+}
+
+uploader.addEventListener('change', loadVideo)
+
+async function convert(file: File, fps: number, scale: number, duration?: number) {
   const log = messageLogger(message)
 
   if (ffmpeg === null) {
@@ -33,6 +56,7 @@ async function convert(file: File, fps: number, scale: number) {
   await ffmpeg.exec([
     '-i',
     name,
+    ...(duration ? ['-t', String(duration)] : []),
     '-vf',
     `fps=${fps},scale=${scale}:-1:flags=lanczos,palettegen`,
     '-y',
@@ -45,6 +69,7 @@ async function convert(file: File, fps: number, scale: number) {
   await ffmpeg.exec([
     '-i',
     name,
+    ...(duration ? ['-t', String(duration)] : []),
     '-i',
     'palette.png',
     '-filter_complex',
@@ -71,7 +96,7 @@ form.addEventListener('submit', (event) => {
   if (file.size === 0 || file.name === '')
     return
 
-  convert(file, Number(formData.get('fps')), Number(formData.get('scale')))
+  convert(file, Number(formData.get('fps')), Number(formData.get('scale')), Number(formData.get('duration')))
 })
 
 function messageLogger(container: HTMLParagraphElement) {

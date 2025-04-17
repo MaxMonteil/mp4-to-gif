@@ -10,11 +10,34 @@
   <body class="bg-slate-200 grid place-items-center h-screen p-4">
     <div
       id="app"
-      class="bg-white rounded-md w-full max-w-2xl flex flex-col gap-8 p-4 -mt-48"
+      class="bg-white rounded-md w-full max-w-2xl flex flex-col gap-8 p-4"
     >
       <h1 class="text-3xl font-bold">MP4 to Gif</h1>
 
       <form id="form" class="flex flex-col gap-4 group">
+        <input
+          id="uploader"
+          class="file:px-4 file:py-1 file:rounded file:bg-slate-500 file:text-white file:cursor-pointer active:file:bg-slate-700"
+          type="file"
+          name="file"
+          required
+        />
+
+        <video id="preview" controls></video>
+
+        <label title="Trims the original video down to the given length.">
+          <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Trim Video to length (in seconds)</span>
+          <span class="text-slate-500 text-sm">(longer means bigger file)</span>
+
+          <input
+            id="duration"
+            class="block border border-slate-400 rounded px-2 py-1 mt-2"
+            type="number"
+            name="duration"
+            min="1"
+          />
+        </label>
+
         <label title="Sets the gif width, aspect ratio is maintained">
           <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Gif Size</span>
           <span class="text-slate-500 text-sm">(higher means bigger file)</span>
@@ -25,7 +48,7 @@
             name="scale"
             min="160"
             max="1920"
-            value="160"
+            value="368"
           />
         </label>
 
@@ -41,13 +64,6 @@
             value="6"
           />
         </label>
-
-        <input
-          class="file:px-4 file:py-1 file:rounded file:bg-slate-500 file:text-white file:cursor-pointer active:file:bg-slate-700"
-          type="file"
-          name="file"
-          required
-        />
 
         <button class="bg-sky-600 text-white rounded py-1 mt-4 group-invalid:bg-sky-200 group-invalid:cursor-not-allowed cursor-pointer">Convert!</button>
       </form>
