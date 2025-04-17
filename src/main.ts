@@ -1,16 +1,35 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
-const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
-let ffmpeg: FFmpeg | null = null
-
 const form = document.querySelector<HTMLFormElement>('#form')!
 const uploader = document.querySelector<HTMLInputElement>('#uploader')!
 const previewVideo = document.querySelector<HTMLVideoElement>('#preview')!
+
+const durationInput = document.querySelector<HTMLInputElement>('input[name="duration"]')!
+const fpsInput = document.querySelector<HTMLInputElement>('input[name="fps"]')!
+const scaleInput = document.querySelector<HTMLInputElement>('input[name="scale"]')!
+
 const palette = document.querySelector<HTMLImageElement>('#palette')!
 const message = document.querySelector<HTMLParagraphElement>('#message')!
 const progressBar = document.querySelector<HTMLProgressElement>('#progress')!
 const fileSize = document.querySelector<HTMLProgressElement>('#file-size')!
+
+// Populate the form from Query Params if available
+const params = new URLSearchParams(window.location.search)
+
+const duration = params.get('duration')
+const fps = params.get('smoothness')
+const scale = params.get('size')
+
+if (duration)
+  durationInput.value = duration
+if (fps)
+  fpsInput.value = fps
+if (scale)
+  scaleInput.value = scale
+
+const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
+let ffmpeg: FFmpeg | null = null
 
 async function loadVideo() {
   const file = uploader.files?.[0]
@@ -21,7 +40,6 @@ async function loadVideo() {
   previewVideo.preload = 'metadata'
   previewVideo.src = url
 
-  const durationInput = document.querySelector<HTMLInputElement>('#duration')!
   previewVideo.onloadedmetadata = () => {
     durationInput.setAttribute('max', String(previewVideo.duration))
   }
@@ -97,6 +115,19 @@ form.addEventListener('submit', (event) => {
     return
 
   convert(file, Number(formData.get('fps')), Number(formData.get('scale')), Number(formData.get('duration')))
+})
+
+form.addEventListener('input', () => {
+  const formData = new FormData(form)
+  const params = new URLSearchParams()
+
+  for (const [key, value] of formData.entries()) {
+    if (value && key !== 'file')
+      params.set(key, String(value))
+  }
+
+  const newURL = `${location.pathname}?${params.toString()}`
+  history.replaceState(null, '', newURL)
 })
 
 function messageLogger(container: HTMLParagraphElement) {

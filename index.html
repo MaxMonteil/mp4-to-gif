@@ -26,11 +26,10 @@
         <video id="preview" controls></video>
 
         <label title="Trims the original video down to the given length.">
-          <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Trim Video to length (in seconds)</span>
+          <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Trim video length (in seconds)</span>
           <span class="text-slate-500 text-sm">(longer means bigger file)</span>
 
           <input
-            id="duration"
             class="block border border-slate-400 rounded px-2 py-1 mt-2"
             type="number"
             name="duration"
@@ -40,7 +39,7 @@
 
         <label title="Sets the gif width, aspect ratio is maintained">
           <span class="block after:content-['?'] after:align-super after:text-xs after:cursor-help">Gif Size</span>
-          <span class="text-slate-500 text-sm">(higher means bigger file)</span>
+          <span class="text-slate-500 text-sm">(higher means bigger file, Default: 368 [SR size])</span>
 
           <input
             class="block border border-slate-400 rounded px-2 py-1 mt-2"
