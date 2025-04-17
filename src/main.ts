@@ -72,9 +72,11 @@ async function convert(file: File, fps: number, scale: number, duration?: number
   log('Converting...')
 
   await ffmpeg.exec([
+    '-ss',
+    '0',
+    ...(duration ? ['-t', String(duration)] : []),
     '-i',
     name,
-    ...(duration ? ['-t', String(duration)] : []),
     '-vf',
     `fps=${fps},scale=${scale}:-1:flags=lanczos,palettegen`,
     '-y',
@@ -85,9 +87,11 @@ async function convert(file: File, fps: number, scale: number, duration?: number
   await ffmpeg.writeFile('palette.png', paletteData)
 
   await ffmpeg.exec([
+    '-ss',
+    '0',
+    ...(duration ? ['-t', String(duration)] : []),
     '-i',
     name,
-    ...(duration ? ['-t', String(duration)] : []),
     '-i',
     'palette.png',
     '-filter_complex',
